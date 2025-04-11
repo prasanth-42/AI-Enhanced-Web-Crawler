@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Web Scraper 🌐</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        textarea { width: 100%; height: 100px; }
+        .result-box { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>AI Enhanced Web Crawler 🌐</h1>
+    <form method="POST">
+        <label>Enter Website URL 🔗:</label><br>
+        <input type="text" name="url" style="width:100%;" required><br><br>
+
+        <label>Describe what you want to parse 📝:</label><br>
+        <textarea name="description" required></textarea><br><br>
+
+        <label>Select a Model 🚀:</label><br>
+        <select name="model">
+            <option value="llama3-8b-8192">llama3-8b-8192</option>
+            <option value="llama3-groq-70b-8192-tool-use-preview">llama3-groq-70b-8192-tool-use-preview</option>
+            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+            <option value="llava-v1.5-7b-4096-preview">llava-v1.5-7b-4096-preview</option>
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+        </select><br><br>
+
+        <button type="submit">Scrape & Parse</button>
+    </form>
+
+    {% if result %}
+    <div class="result-box">
+        <h2>🔍 Parsed Result:</h2>
+        <pre>{{ result }}</pre>
+    </div>
+    {% endif %}
+</body>
+</html>

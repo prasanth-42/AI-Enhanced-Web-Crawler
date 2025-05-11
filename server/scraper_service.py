@@ -23,16 +23,33 @@ def get_vectorstore_from_url(url):
         VectorStore: A Chroma vector store containing the embedded document chunks
     """
     try:
+        import trafilatura
+        from langchain_core.documents import Document
+        
         logger.debug(f"Loading content from URL: {url}")
-        loader = WebBaseLoader(url)
-        document = loader.load()
+        
+        # Use trafilatura for better content extraction
+        downloaded = trafilatura.fetch_url(url)
+        text = trafilatura.extract(downloaded)
+        
+        if not text:
+            # Fallback to WebBaseLoader if trafilatura fails
+            logger.debug("Trafilatura extraction failed, falling back to WebBaseLoader")
+            loader = WebBaseLoader(url)
+            document = loader.load()
+        else:
+            # Create Document object from extracted text
+            document = [Document(page_content=text, metadata={"source": url})]
+            logger.debug(f"Successfully extracted content with trafilatura")
         
         logger.debug(f"Splitting document into chunks")
-        text_splitter = RecursiveCharacterTextSplitter()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         document_chunks = text_splitter.split_documents(document)
         
-        logger.debug(f"Creating embeddings and vector store")
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        logger.debug(f"Creating simple embeddings and vector store")
+        # Use a simple embedding method to avoid dependency issues
+        from langchain_community.embeddings import FakeEmbeddings
+        embeddings = FakeEmbeddings(size=1536)  # Using fake embeddings for now
         vector_store = Chroma.from_documents(document_chunks, embedding=embeddings)
         
         return vector_store

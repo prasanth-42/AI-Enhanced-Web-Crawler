@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__, static_folder="../client", template_folder="../client")
+app = Flask(__name__, static_folder="../client", template_folder="../client", static_url_path='')
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
 # Enable CORS

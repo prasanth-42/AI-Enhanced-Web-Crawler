@@ -1,0 +1,141 @@
+/* Cyberpunk-themed background and effects */
+
+/* Digital cyberpunk-inspired background */
+.cyberpunk-bg {
+    background-color: #0f0f18;
+    position: relative;
+    overflow: hidden;
+}
+
+.cyberpunk-bg::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(to bottom, rgba(15, 15, 24, 0.95), rgba(10, 10, 20, 0.98)),
+        url('https://pixabay.com/get/g820682cf7be26b599a4534701bcb32f866bdbd3a6ebde883ffa3a6d8292ac5e12112eb979f7834d03b5f2c72be3cdaf13d0838e99cc2116b8e7c25600e869ba5_1280.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    z-index: -1;
+}
+
+/* Digital grid effect */
+.cyberpunk-bg::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 128, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 128, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: -1;
+}
+
+/* Glowing effects */
+.cyberpunk-glow-blue {
+    text-shadow: 0 0 10px rgba(0, 128, 255, 0.7);
+}
+
+.cyberpunk-glow-green {
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.7);
+}
+
+.cyberpunk-glow-purple {
+    text-shadow: 0 0 10px rgba(170, 0, 255, 0.7);
+}
+
+/* Neon borders */
+.cyberpunk-border-blue {
+    border: 1px solid #0080ff;
+    box-shadow: 0 0 10px rgba(0, 128, 255, 0.5), inset 0 0 5px rgba(0, 128, 255, 0.2);
+}
+
+.cyberpunk-border-green {
+    border: 1px solid #00ffaa;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.5), inset 0 0 5px rgba(0, 255, 170, 0.2);
+}
+
+.cyberpunk-border-purple {
+    border: 1px solid #aa00ff;
+    box-shadow: 0 0 10px rgba(170, 0, 255, 0.5), inset 0 0 5px rgba(170, 0, 255, 0.2);
+}
+
+/* Futuristic chat interface overlay */
+.chat-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://pixabay.com/get/g2684b7d48f68d9cfcc9e9e4f39901939c6412f2db1209d2a0f96d7f279884ce74923636391cda7f55672aa6b5881df6258d1ad3373c892f1248429ec573a0321_1280.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.1;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Digital scan effect */
+@keyframes digitalScan {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 20px rgba(0, 255, 170, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 170, 0);
+    }
+}
+
+.digital-scan {
+    animation: digitalScan 2s infinite;
+}
+
+/* Data transmission effect */
+@keyframes dataTransmission {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.data-transmission {
+    background: linear-gradient(270deg, #00aeff, #00ffc3, #aa00ff);
+    background-size: 600% 600%;
+    animation: dataTransmission 3s ease infinite;
+}
+
+/* Futuristic separator line */
+.cyberpunk-separator {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #0080ff, #00ffaa, #0080ff, transparent);
+    margin: 20px 0;
+    position: relative;
+}
+
+.cyberpunk-separator::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 6px;
+    background-color: #00ffaa;
+    border-radius: 3px;
+    box-shadow: 0 0 10px #00ffaa;
+}

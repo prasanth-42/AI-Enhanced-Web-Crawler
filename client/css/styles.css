@@ -1,0 +1,300 @@
+/* Main app styles */
+body {
+    font-family: 'Rajdhani', sans-serif;
+    color: #e0e0ff;
+    background-color: #0f0f18;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Header styling */
+.cyberpunk-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    background: linear-gradient(90deg, #00ffff, #0080ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.cyberpunk-icon {
+    height: 40px;
+    width: 40px;
+    color: #00ffaa;
+    filter: drop-shadow(0 0 5px rgba(0, 255, 170, 0.7));
+}
+
+.cyberpunk-spider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    border: 2px solid #00ffaa;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+    padding: 5px;
+}
+
+/* URL input styling */
+.url-input-container {
+    background: rgba(15, 20, 35, 0.7);
+    border: 1px solid #3b4078;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.cyberpunk-input-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.cyberpunk-input {
+    flex-grow: 1;
+    background-color: rgba(20, 25, 45, 0.8);
+    border: 1px solid #3b4078;
+    border-radius: 5px;
+    color: #e0e0ff;
+    padding: 12px 15px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.cyberpunk-input:focus {
+    outline: none;
+    border-color: #0080ff;
+    box-shadow: 0 0 10px rgba(0, 128, 255, 0.5);
+}
+
+.cyberpunk-input::placeholder {
+    color: #6b7280;
+}
+
+.cyberpunk-button {
+    background: linear-gradient(45deg, #0080ff, #00ffaa);
+    border: none;
+    border-radius: 5px;
+    color: #000;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 128, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cyberpunk-button:hover {
+    background: linear-gradient(45deg, #00aeff, #00ffc3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 128, 255, 0.7);
+}
+
+.cyberpunk-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 128, 255, 0.5);
+}
+
+/* Chat container styling */
+.cyberpunk-chat-container {
+    background: rgba(15, 20, 35, 0.7);
+    border: 1px solid #3b4078;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+    min-height: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.cyberpunk-chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cyberpunk-input-container {
+    padding: 15px;
+    border-top: 1px solid #3b4078;
+    background: rgba(10, 15, 30, 0.8);
+}
+
+/* Message styling */
+.cyberpunk-message {
+    display: flex;
+    margin-bottom: 15px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.bot-message {
+    justify-content: flex-start;
+}
+
+.user-message {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.bot-message .message-content {
+    background: linear-gradient(135deg, rgba(0, 128, 255, 0.2), rgba(0, 255, 170, 0.2));
+    border-left: 3px solid #0080ff;
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, rgba(128, 0, 255, 0.2), rgba(255, 0, 127, 0.2));
+    border-right: 3px solid #ff00aa;
+}
+
+.cyberpunk-message-text {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Loading indicator */
+.cyberpunk-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.cyberpunk-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.cyberpunk-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid transparent;
+    border-radius: 50%;
+    border-top-color: #00ffaa;
+    border-bottom-color: #0080ff;
+    animation: spin 1.5s linear infinite;
+    box-shadow: 0 0 15px rgba(0, 255, 170, 0.5);
+}
+
+.cyberpunk-loading-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    color: #00ffaa;
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+    animation: pulse 1.5s infinite alternate;
+}
+
+/* Alert styling */
+.cyberpunk-alert {
+    background: rgba(25, 20, 35, 0.8);
+    border-left: 5px solid #ffaa00;
+    color: #e0e0ff;
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+}
+
+/* Footer styling */
+.cyberpunk-footer {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.cyberpunk-highlight {
+    color: #00ffaa;
+    font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    from {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(20, 25, 45, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0080ff, #00ffaa);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00aeff, #00ffc3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cyberpunk-title {
+        font-size: 1.8rem;
+    }
+    
+    .cyberpunk-icon {
+        height: 30px;
+        width: 30px;
+    }
+    
+    .cyberpunk-spider {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .cyberpunk-input-group {
+        flex-direction: column;
+    }
+    
+    .cyberpunk-chat-container {
+        height: 60vh;
+    }
+    
+    .message-content {
+        max-width: 90%;
+    }
+}

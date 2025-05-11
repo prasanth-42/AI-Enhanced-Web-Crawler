@@ -23,58 +23,55 @@ def get_vectorstore_from_url(url):
         VectorStore: A Chroma vector store containing the embedded document chunks
     """
     try:
-        import trafilatura
-        import requests
-        from bs4 import BeautifulSoup
-        from langchain_core.documents import Document
+        from langchain_community.document_loaders import WebBaseLoader
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+        from langchain_community.embeddings import HuggingFaceEmbeddings
         
         logger.debug(f"Loading content from URL: {url}")
         
-        # First try with direct request and BeautifulSoup
+        # Use WebBaseLoader directly like in the successful Streamlit app
         try:
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            # Extract text from all paragraph tags
-            paragraphs = soup.find_all('p')
-            extracted_text = "\n\n".join([p.get_text().strip() for p in paragraphs])
+            # Set custom headers to mimic a browser
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+                "Cache-Control": "max-age=0"
+            }
             
-            # If we got meaningful text, use it
-            if extracted_text and len(extracted_text) > 100:
-                logger.debug(f"Successfully extracted content with BeautifulSoup")
-                document = [Document(page_content=extracted_text, metadata={"source": url})]
-            else:
-                # Try with trafilatura
-                downloaded = trafilatura.fetch_url(url)
-                text = trafilatura.extract(downloaded)
-                
-                if not text:
-                    # If both failed, try to get all text from the page
-                    logger.debug("Extraction methods failed, getting all text from page")
-                    all_text = soup.get_text(separator="\n\n")
-                    document = [Document(page_content=all_text, metadata={"source": url})]
-                else:
-                    # Create Document object from extracted text
-                    document = [Document(page_content=text, metadata={"source": url})]
-                    logger.debug(f"Successfully extracted content with trafilatura")
+            # Use WebBaseLoader with custom headers
+            loader = WebBaseLoader(
+                web_paths=[url],
+                header_template=headers
+            )
+            
+            logger.debug("Using WebBaseLoader to load document")
+            document = loader.load()
+            logger.debug(f"Successfully loaded document with {len(document)} pages")
+            
+            logger.debug(f"Splitting document into chunks")
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            document_chunks = text_splitter.split_documents(document)
+            logger.debug(f"Created {len(document_chunks)} document chunks")
+            
+            # Using FakeEmbeddings since we can't install sentence-transformers
+            logger.debug("Creating embeddings")
+            from langchain_community.embeddings import FakeEmbeddings
+            embeddings = FakeEmbeddings(size=384)  # Same size as all-MiniLM-L6-v2
+            logger.debug("Using FakeEmbeddings for vector embeddings")
+            
+            # Create vector store
+            logger.debug("Creating Chroma vector store")
+            vector_store = Chroma.from_documents(document_chunks, embedding=embeddings)
+            logger.debug("Successfully created vector store")
+            
+            return vector_store
+            
         except Exception as inner_e:
-            logger.error(f"Error in content extraction: {str(inner_e)}")
-            # Fallback to just getting the full HTML as text
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            all_text = soup.get_text(separator="\n\n")
-            document = [Document(page_content=all_text, metadata={"source": url})]
-        
-        logger.debug(f"Splitting document into chunks")
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        document_chunks = text_splitter.split_documents(document)
-        
-        logger.debug(f"Creating simple embeddings and vector store")
-        # Use a simple embedding method to avoid dependency issues
-        from langchain_community.embeddings import FakeEmbeddings
-        embeddings = FakeEmbeddings(size=1536)  # Using fake embeddings for now
-        vector_store = Chroma.from_documents(document_chunks, embedding=embeddings)
-        
-        return vector_store
+            logger.error(f"Error in WebBaseLoader: {str(inner_e)}")
+            raise  # Re-raise to be caught by outer exception handler
         
     except Exception as e:
         logger.error(f"Error in get_vectorstore_from_url: {str(e)}")

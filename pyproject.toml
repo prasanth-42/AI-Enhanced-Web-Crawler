@@ -18,6 +18,7 @@ dependencies = [
     "pydantic>=2.11.4",
     "beautifulsoup4>=4.13.4",
     "requests>=2.32.3",
+    "chromadb>=1.0.8",
 ]
 
 [[tool.uv.index]]

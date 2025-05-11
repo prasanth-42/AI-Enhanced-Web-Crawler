@@ -35,13 +35,10 @@
         
         <main class="row">
             <div class="col-md-12">
-                <div id="api-key-alert" class="alert alert-warning cyberpunk-alert d-none" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <span>No Groq API key detected. Please enter your API key to use the service.</span>
-                    <div class="mt-2">
-                        <input type="password" id="api-key-input" class="cyberpunk-input" placeholder="Enter your Groq API key">
-                        <button id="save-api-key" class="cyberpunk-button mt-2">Save API Key</button>
-                    </div>
+                <!-- API key is now stored in .env file on the server -->
+                <div id="api-connection-info" class="alert alert-info cyberpunk-alert mb-4" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>Using Groq's LLaMa3-8b-8192 model for AI interactions.</span>
                 </div>
                 
                 <div class="url-input-container mb-4">

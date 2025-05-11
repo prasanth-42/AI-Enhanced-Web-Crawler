@@ -62,8 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/api/check_api_key')
             .then(response => response.json())
             .then(data => {
+                // We now always use the API key from the .env file
+                // No need to show the alert anymore
+                console.log("API key status:", data.has_api_key ? "Available" : "Not available");
+                
+                // In a real app, we might want to disable functionality if no API key
                 if (!data.has_api_key) {
-                    apiKeyAlert.classList.remove('d-none');
+                    console.warn("No API key found in environment, but continuing anyway");
                 }
             })
             .catch(error => {

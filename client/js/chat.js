@@ -89,6 +89,13 @@ function sendMessage() {
         // Hide typing indicator
         hideTypingIndicator();
         
+        // Check if the URL is included in the response and display it
+        const currentUrl = localStorage.getItem('current_url');
+        if (data.url && data.url !== currentUrl) {
+            console.warn(`Warning: Response is from URL ${data.url} but current URL is ${currentUrl}`);
+            addMessageToChat(`Note: This response is based on content from: ${data.url}`, 'bot', true);
+        }
+        
         // Add bot response to chat
         addMessageToChat(data.response, 'bot');
     })

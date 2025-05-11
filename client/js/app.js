@@ -5,9 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatContainer = document.getElementById('chat-container');
     const loadingContainer = document.getElementById('loading-container');
     const loadingText = document.getElementById('loading-text');
-    const apiKeyAlert = document.getElementById('api-key-alert');
-    const apiKeyInput = document.getElementById('api-key-input');
-    const saveApiKeyBtn = document.getElementById('save-api-key');
+    const apiConnectionInfo = document.getElementById('api-connection-info');
     
     // Application state
     let sessionId = null;
@@ -77,24 +75,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     /**
-     * Save API key
+     * Clear previous session (not used anymore, API key is on server)
      */
-    function saveApiKey(apiKey) {
-        // In a real application, we would send this to the server
-        // For this demo, we'll just hide the alert and assume it works
-        localStorage.setItem('groq_api_key', apiKey);
-        apiKeyAlert.classList.add('d-none');
-        showNotification('API key saved successfully', 'success');
+    function clearPreviousSession() {
+        sessionId = null;
+        localStorage.removeItem('current_session_id');
+        localStorage.removeItem('current_url');
     }
     
     /**
      * Scrape a website
      */
     function scrapeWebsite(url) {
+        // Clear any previous session data
+        clearPreviousSession();
+        
         // Show loading state
         chatContainer.classList.add('d-none');
         loadingContainer.classList.remove('d-none');
         loadingText.textContent = 'Processing website...';
+        
+        // Store current URL
+        localStorage.setItem('current_url', url);
         
         // Make API request to scrape website
         fetch('/api/scrape', {
@@ -113,6 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             sessionId = data.session_id;
             
+            // Store session ID
+            localStorage.setItem('current_session_id', sessionId);
+            
             // Hide loading state and show chat container
             loadingContainer.classList.add('d-none');
             chatContainer.classList.remove('d-none');
@@ -120,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize chat system
             initChat(sessionId);
             
-            showNotification('Website scraped successfully!', 'success');
+            showNotification(`Website ${url} scraped successfully!`, 'success');
         })
         .catch(error => {
             console.error('Error scraping website:', error);

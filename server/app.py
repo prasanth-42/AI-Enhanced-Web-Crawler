@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -51,14 +52,29 @@ def scrape():
         # Create a unique session ID
         session_id = scraper_service.create_session_id()
         
+        # Clear any previous data for sessions older than 1 hour
+        current_time = time.time()
+        sessions_to_remove = []
+        for sid, session_data in sessions.items():
+            if 'timestamp' in session_data and (current_time - session_data['timestamp']) > 3600:
+                sessions_to_remove.append(sid)
+                
+        for sid in sessions_to_remove:
+            logger.debug(f"Removing old session: {sid}")
+            del sessions[sid]
+        
         # Scrape website and create vector store
         vector_store = scraper_service.get_vectorstore_from_url(url)
         
-        # Store vector_store and initialize empty chat history
+        # Store vector_store and initialize empty chat history with timestamp
         sessions[session_id] = {
             "vector_store": vector_store,
-            "chat_history": []
+            "chat_history": [],
+            "url": url,
+            "timestamp": current_time
         }
+        
+        logger.debug(f"Created new session {session_id} for URL: {url}")
         
         return jsonify({
             "session_id": session_id,
@@ -90,13 +106,17 @@ def chat():
             return jsonify({"error": "Both session_id and query are required"}), 400
             
         if session_id not in sessions:
-            return jsonify({"error": "Invalid session ID"}), 404
+            return jsonify({"error": "Invalid or expired session ID. Please scrape the website again."}), 404
             
         session = sessions[session_id]
         vector_store = session["vector_store"]
         chat_history = session["chat_history"]
+        url = session.get("url", "unknown")
         
-        logger.debug(f"Processing query: {query}")
+        logger.debug(f"Processing query for URL '{url}': {query}")
+        
+        # Update session timestamp to keep it active
+        session["timestamp"] = time.time()
         
         # Get response from LLM
         response = llm_service.get_response(query, vector_store, chat_history)
@@ -106,7 +126,8 @@ def chat():
         session["chat_history"] = updated_history
         
         return jsonify({
-            "response": response
+            "response": response,
+            "url": url
         })
         
     except Exception as e:

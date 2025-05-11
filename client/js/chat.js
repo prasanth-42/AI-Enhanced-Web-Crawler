@@ -89,11 +89,22 @@ function sendMessage() {
         // Hide typing indicator
         hideTypingIndicator();
         
-        // Check if the URL is included in the response and display it
+        // Check if the URL is included in the response and verify session
         const currentUrl = localStorage.getItem('current_url');
+        const currentSessionId = localStorage.getItem('current_session_id');
+        
+        // Session validation
+        if (data.session_id && data.session_id !== currentSessionId) {
+            console.warn(`Session mismatch: Response from ${data.session_id} but current is ${currentSessionId}`);
+            localStorage.setItem('current_session_id', data.session_id);
+        }
+        
+        // URL validation
         if (data.url && data.url !== currentUrl) {
-            console.warn(`Warning: Response is from URL ${data.url} but current URL is ${currentUrl}`);
+            console.warn(`URL mismatch: Response from URL ${data.url} but current URL is ${currentUrl}`);
             addMessageToChat(`Note: This response is based on content from: ${data.url}`, 'bot', true);
+            // Update the stored URL to match what the server is using
+            localStorage.setItem('current_url', data.url);
         }
         
         // Add bot response to chat

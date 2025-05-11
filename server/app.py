@@ -22,7 +22,11 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 CORS(app)
 
 # In-memory storage for chat sessions
+# We'll use a global sessions dictionary with a cleanup mechanism
 sessions = {}
+
+# Also track the latest URL for each session to help with debugging
+latest_urls = {}
 
 @app.route('/')
 def index():
@@ -52,27 +56,46 @@ def scrape():
         # Create a unique session ID
         session_id = scraper_service.create_session_id()
         
-        # Clear any previous data for sessions older than 1 hour
+        # Before creating new sessions, clean up old ones and any session with the same URL
         current_time = time.time()
         sessions_to_remove = []
+        
+        # Clean old sessions and sessions with the same URL
         for sid, session_data in sessions.items():
+            # Remove sessions that are old (older than 1 hour)
             if 'timestamp' in session_data and (current_time - session_data['timestamp']) > 3600:
                 sessions_to_remove.append(sid)
+            # Also remove any session that was created for the same URL
+            elif 'url' in session_data and session_data['url'] == url:
+                logger.debug(f"Found existing session for URL {url}, will replace it")
+                sessions_to_remove.append(sid)
                 
+        # Remove flagged sessions
         for sid in sessions_to_remove:
-            logger.debug(f"Removing old session: {sid}")
+            logger.debug(f"Removing session: {sid}")
             del sessions[sid]
+            if sid in latest_urls:
+                del latest_urls[sid]
         
-        # Scrape website and create vector store
-        vector_store = scraper_service.get_vectorstore_from_url(url)
+        # Scrape website and create vector store following the Streamlit pattern
+        try:
+            # This method is now using WebBaseLoader like in the Streamlit app
+            vector_store = scraper_service.get_vectorstore_from_url(url)
+            logger.debug(f"Successfully created vector store for URL: {url}")
+        except Exception as scrape_error:
+            logger.error(f"Error during scraping: {str(scrape_error)}")
+            return jsonify({"error": f"Failed to scrape website: {str(scrape_error)}"}), 500
         
         # Store vector_store and initialize empty chat history with timestamp
         sessions[session_id] = {
             "vector_store": vector_store,
-            "chat_history": [],
-            "url": url,
+            "chat_history": [],  # Start with empty chat history
+            "url": url,          # Store URL for reference
             "timestamp": current_time
         }
+        
+        # Also track the latest URL
+        latest_urls[session_id] = url
         
         logger.debug(f"Created new session {session_id} for URL: {url}")
         
@@ -118,8 +141,35 @@ def chat():
         # Update session timestamp to keep it active
         session["timestamp"] = time.time()
         
-        # Get response from LLM
-        response = llm_service.get_response(query, vector_store, chat_history)
+        try:
+            # This matches the RAG pipeline logic in the Streamlit app
+            logger.debug("Setting up RAG pipeline for query")
+            
+            # Get context retriever chain - similar to Streamlit app's get_context_retriever_chain function
+            retriever_chain = llm_service.get_context_retriever_chain(vector_store)
+            
+            # Get conversational RAG chain - similar to Streamlit app's get_conversational_rag_chain function
+            rag_chain = llm_service.get_conversational_rag_chain(retriever_chain)
+            
+            # Get response - invoke with chat history and user input, similar to Streamlit app's get_response function
+            response_data = rag_chain.invoke({
+                "chat_history": chat_history,
+                "input": query
+            })
+            
+            logger.debug("RAG pipeline completed successfully")
+            
+            # Extract answer from response
+            if isinstance(response_data, dict) and "answer" in response_data:
+                response = response_data["answer"]
+            else:
+                logger.warning(f"Unexpected response format: {type(response_data)}")
+                response = str(response_data)  # Fallback to string representation
+                
+        except Exception as rag_error:
+            logger.error(f"Error in RAG pipeline: {str(rag_error)}")
+            # Fallback to simpler response method
+            response = llm_service.get_response(query, vector_store, chat_history)
         
         # Update chat history with new interaction
         updated_history = llm_service.update_chat_history(chat_history, query, response)
@@ -127,7 +177,8 @@ def chat():
         
         return jsonify({
             "response": response,
-            "url": url
+            "url": url,
+            "session_id": session_id  # Include session_id in response for validation
         })
         
     except Exception as e:

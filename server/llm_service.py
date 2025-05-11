@@ -89,7 +89,10 @@ class GroqChatLLM(BaseChatModel):
         stop: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> str:
-        return self._generate(messages, stop=stop, **kwargs)
+        result = self._generate(messages, stop=stop, **kwargs)
+        if hasattr(result, 'generations') and result.generations:
+            return result.generations[0].text
+        return "Unable to generate response"
 
 def get_context_retriever_chain(vector_store):
     """Create a retriever chain that is aware of conversation history"""
@@ -129,15 +132,22 @@ def get_response(user_input, vector_store, chat_history):
     Returns:
         str: The LLM's response
     """
+    # This follows the same pattern as the Streamlit app's get_response function
     retriever_chain = get_context_retriever_chain(vector_store)
     rag_chain = get_conversational_rag_chain(retriever_chain)
 
+    # Invoke the chain with chat history and user input
     response = rag_chain.invoke({
         "chat_history": chat_history,
         "input": user_input
     })
 
-    return response["answer"]
+    # In the Streamlit app, this returns response["answer"]
+    if isinstance(response, dict) and "answer" in response:
+        return response["answer"]
+    else:
+        # Fallback return whole response as string if not in expected format
+        return str(response)
 
 def update_chat_history(chat_history, user_query, response):
     """

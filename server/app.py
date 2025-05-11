@@ -21,12 +21,24 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 # Enable CORS
 CORS(app)
 
-# In-memory storage for chat sessions
-# We'll use a global sessions dictionary with a cleanup mechanism
+# Global registry for sessions
+# Completely clear this on app initialization to solve the persistence issue across reloads
 sessions = {}
-
-# Also track the latest URL for each session to help with debugging
 latest_urls = {}
+
+# Explicitly clear all sessions on module load to solve persistence issues
+# This is necessary to ensure a clean start each time the app is reloaded
+def clear_all_sessions():
+    """Clear all sessions and URLs from global state"""
+    global sessions, latest_urls
+    old_session_count = len(sessions)
+    if old_session_count > 0:
+        logger.debug(f"Clearing {old_session_count} existing sessions on app initialization")
+    sessions.clear()
+    latest_urls.clear()
+    
+# Call this on module import to ensure a clean slate
+clear_all_sessions()
 
 @app.route('/')
 def index():
@@ -53,33 +65,21 @@ def scrape():
             
         logger.debug(f"Scraping URL: {url}")
         
+        # CRITICAL FIX: Clean up ALL sessions before creating a new one
+        # This ensures there's only ever one active session in the app, exactly like Streamlit
+        clear_all_sessions()
+        logger.debug("Cleared all existing sessions")
+        
         # Create a unique session ID
         session_id = scraper_service.create_session_id()
         
-        # Before creating new sessions, clean up old ones and any session with the same URL
+        # Current time for session expiry tracking
         current_time = time.time()
-        sessions_to_remove = []
         
-        # Clean old sessions and sessions with the same URL
-        for sid, session_data in sessions.items():
-            # Remove sessions that are old (older than 1 hour)
-            if 'timestamp' in session_data and (current_time - session_data['timestamp']) > 3600:
-                sessions_to_remove.append(sid)
-            # Also remove any session that was created for the same URL
-            elif 'url' in session_data and session_data['url'] == url:
-                logger.debug(f"Found existing session for URL {url}, will replace it")
-                sessions_to_remove.append(sid)
-                
-        # Remove flagged sessions
-        for sid in sessions_to_remove:
-            logger.debug(f"Removing session: {sid}")
-            del sessions[sid]
-            if sid in latest_urls:
-                del latest_urls[sid]
-        
-        # Scrape website and create vector store following the Streamlit pattern
+        # Scrape website and create vector store following the Streamlit pattern exactly
         try:
-            # This method is now using WebBaseLoader like in the Streamlit app
+            logger.debug(f"Starting to scrape website: {url}")
+            # This method now uses WebBaseLoader like in the Streamlit app
             vector_store = scraper_service.get_vectorstore_from_url(url)
             logger.debug(f"Successfully created vector store for URL: {url}")
         except Exception as scrape_error:
@@ -87,14 +87,15 @@ def scrape():
             return jsonify({"error": f"Failed to scrape website: {str(scrape_error)}"}), 500
         
         # Store vector_store and initialize empty chat history with timestamp
+        # This follows the same pattern as Streamlit's session_state
         sessions[session_id] = {
             "vector_store": vector_store,
-            "chat_history": [],  # Start with empty chat history
+            "chat_history": [],  # Start with empty chat history like Streamlit's chat_history
             "url": url,          # Store URL for reference
             "timestamp": current_time
         }
         
-        # Also track the latest URL
+        # Also track the latest URL for debugging
         latest_urls[session_id] = url
         
         logger.debug(f"Created new session {session_id} for URL: {url}")

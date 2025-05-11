@@ -42,15 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Save API key button click event
-        saveApiKeyBtn.addEventListener('click', () => {
-            const apiKey = apiKeyInput.value.trim();
-            if (apiKey) {
-                saveApiKey(apiKey);
-            } else {
-                showNotification('Please enter a valid API key', 'error');
-            }
-        });
+        // API key is now managed on the server side via .env file
+        // No longer need the client-side API key input
     }
     
     /**
@@ -97,14 +90,25 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Store current URL
         localStorage.setItem('current_url', url);
+        console.log("Starting to scrape new URL:", url);
         
-        // Make API request to scrape website
-        fetch('/api/scrape', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ url })
+        // First, explicitly clear all sessions on the server
+        // This ensures a completely fresh start with every new URL
+        fetch('/api/clear_sessions', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Server sessions cleared:", data.message);
+            
+            // Now make API request to scrape website
+            return fetch('/api/scrape', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
+            });
         })
         .then(response => {
             if (!response.ok) {

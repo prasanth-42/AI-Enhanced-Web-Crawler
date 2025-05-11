@@ -56,11 +56,10 @@ def get_vectorstore_from_url(url):
             document_chunks = text_splitter.split_documents(document)
             logger.debug(f"Created {len(document_chunks)} document chunks")
             
-            # Using FakeEmbeddings since we can't install sentence-transformers
-            logger.debug("Creating embeddings")
-            from langchain_community.embeddings import FakeEmbeddings
-            embeddings = FakeEmbeddings(size=384)  # Same size as all-MiniLM-L6-v2
-            logger.debug("Using FakeEmbeddings for vector embeddings")
+            # Use HuggingFace embeddings like in the Streamlit app
+            logger.debug("Creating HuggingFaceEmbeddings")
+            embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+            logger.debug("Successfully created HuggingFaceEmbeddings")
             
             # Create vector store
             logger.debug("Creating Chroma vector store")

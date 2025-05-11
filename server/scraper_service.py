@@ -24,23 +24,45 @@ def get_vectorstore_from_url(url):
     """
     try:
         import trafilatura
+        import requests
+        from bs4 import BeautifulSoup
         from langchain_core.documents import Document
         
         logger.debug(f"Loading content from URL: {url}")
         
-        # Use trafilatura for better content extraction
-        downloaded = trafilatura.fetch_url(url)
-        text = trafilatura.extract(downloaded)
-        
-        if not text:
-            # Fallback to WebBaseLoader if trafilatura fails
-            logger.debug("Trafilatura extraction failed, falling back to WebBaseLoader")
-            loader = WebBaseLoader(url)
-            document = loader.load()
-        else:
-            # Create Document object from extracted text
-            document = [Document(page_content=text, metadata={"source": url})]
-            logger.debug(f"Successfully extracted content with trafilatura")
+        # First try with direct request and BeautifulSoup
+        try:
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            # Extract text from all paragraph tags
+            paragraphs = soup.find_all('p')
+            extracted_text = "\n\n".join([p.get_text().strip() for p in paragraphs])
+            
+            # If we got meaningful text, use it
+            if extracted_text and len(extracted_text) > 100:
+                logger.debug(f"Successfully extracted content with BeautifulSoup")
+                document = [Document(page_content=extracted_text, metadata={"source": url})]
+            else:
+                # Try with trafilatura
+                downloaded = trafilatura.fetch_url(url)
+                text = trafilatura.extract(downloaded)
+                
+                if not text:
+                    # If both failed, try to get all text from the page
+                    logger.debug("Extraction methods failed, getting all text from page")
+                    all_text = soup.get_text(separator="\n\n")
+                    document = [Document(page_content=all_text, metadata={"source": url})]
+                else:
+                    # Create Document object from extracted text
+                    document = [Document(page_content=text, metadata={"source": url})]
+                    logger.debug(f"Successfully extracted content with trafilatura")
+        except Exception as inner_e:
+            logger.error(f"Error in content extraction: {str(inner_e)}")
+            # Fallback to just getting the full HTML as text
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            all_text = soup.get_text(separator="\n\n")
+            document = [Document(page_content=all_text, metadata={"source": url})]
         
         logger.debug(f"Splitting document into chunks")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)

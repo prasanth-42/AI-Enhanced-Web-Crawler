@@ -16,6 +16,8 @@ dependencies = [
     "langchain-community>=0.3.23",
     "langchain>=0.3.25",
     "pydantic>=2.11.4",
+    "beautifulsoup4>=4.13.4",
+    "requests>=2.32.3",
 ]
 
 [[tool.uv.index]]

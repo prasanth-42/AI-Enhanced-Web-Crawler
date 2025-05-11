@@ -13,6 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if API key is set
     checkApiKey();
     
+    // Clear all server sessions on page load
+    fetch('/api/clear_sessions', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("On page load - Server sessions cleared:", data.message);
+    })
+    .catch(error => {
+        console.error("Failed to clear sessions on load:", error);
+    });
+    
     // Initialize event listeners
     initEventListeners();
     

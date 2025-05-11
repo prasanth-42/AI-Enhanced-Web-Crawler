@@ -16,6 +16,12 @@ def get_vectorstore_from_url(url):
     """
     Scrape a website and create a vector store from its content
     
+    This implementation follows the same pattern as the Streamlit version:
+    1. Use WebBaseLoader to load the website
+    2. Split the document into chunks
+    3. Create embeddings using HuggingFaceEmbeddings
+    4. Create a Chroma vector store
+    
     Args:
         url (str): The URL of the website to scrape
         

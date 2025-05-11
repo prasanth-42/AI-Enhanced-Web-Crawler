@@ -1,7 +1,8 @@
 import os
 import logging
 import time
-from flask import Flask, request, jsonify, render_template
+import json
+from flask import Flask, request, jsonify, render_template, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import server.llm_service as llm_service
@@ -193,6 +194,36 @@ def check_api_key():
     """
     api_key = os.getenv("GROQ_API_KEY")
     return jsonify({"has_api_key": api_key is not None})
+
+@app.route('/api/clear_sessions', methods=['POST'])
+def clear_api_sessions():
+    """
+    Explicit endpoint to clear all sessions
+    This can be called when loading the app to ensure a fresh state
+    """
+    global sessions, latest_urls
+    session_count = len(sessions)
+    sessions = {}
+    latest_urls = {}
+    logger.debug(f"API endpoint cleared {session_count} sessions")
+    return jsonify({"message": f"All sessions cleared successfully ({session_count} sessions)"})
+
+@app.route('/api/debug', methods=['GET'])
+def debug_state():
+    """
+    Debug endpoint to see the current server state
+    This helps diagnose session persistence issues
+    """
+    debug_info = {
+        "session_count": len(sessions),
+        "session_ids": list(sessions.keys()),
+        "urls": latest_urls,
+        "timestamp": time.time()
+    }
+    return Response(
+        json.dumps(debug_info, indent=2),
+        mimetype='application/json'
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)

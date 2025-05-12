@@ -15,7 +15,9 @@ AI-Enhanced Web Crawler is a modern  web application that allows users to scrape
 ---
 
 ## Screenshots
+ **Interface**
 ![Interface](screenshots/interface.png)
+**Working**
 ![Working Example](screenshots/working.png)
 
 ---

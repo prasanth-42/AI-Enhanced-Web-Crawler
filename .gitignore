@@ -1,0 +1,28 @@
+# Python virtual environment
+venv/
+ENV/
+env/
+.venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ChromaDB-related
+chroma/
+.chroma/
+chromadb/
+
+# Miscellaneous
+.DS_Store
+*.log
+*.sqlite3
+*.db
+
+# VSCode and IDE folders
+.vscode/
+.idea/
+
+
+.env

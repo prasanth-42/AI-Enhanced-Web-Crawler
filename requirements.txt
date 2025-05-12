@@ -1,0 +1,17 @@
+# Requirements for GroqChatGenius
+# Generated from pyproject.toml and .env.example
+email-validator>=2.2.0
+flask-cors>=5.0.1
+flask>=3.1.0
+flask-sqlalchemy>=3.1.1
+gunicorn>=23.0.0
+psycopg2-binary>=2.9.10
+trafilatura>=2.0.0
+groq>=0.24.0
+langchain-core>=0.3.59
+langchain-community>=0.3.23
+langchain>=0.3.25
+pydantic>=2.11.4
+beautifulsoup4>=4.13.4
+requests>=2.32.3
+chromadb>=1.0.8

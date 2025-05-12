@@ -21,25 +21,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
 # Enable CORS
 CORS(app)
-
-# Global registry for sessions
-# Completely clear this on app initialization to solve the persistence issue across reloads
 sessions = {}
-latest_urls = {}
-
-# Explicitly clear all sessions on module load to solve persistence issues
-# This is necessary to ensure a clean start each time the app is reloaded
-def clear_all_sessions():
-    """Clear all sessions and URLs from global state"""
-    global sessions, latest_urls
-    old_session_count = len(sessions)
-    if old_session_count > 0:
-        logger.debug(f"Clearing {old_session_count} existing sessions on app initialization")
-    sessions.clear()
-    latest_urls.clear()
-    
-# Call this on module import to ensure a clean slate
-clear_all_sessions()
 
 @app.route('/')
 def index():
@@ -66,38 +48,27 @@ def scrape():
             
         logger.debug(f"Scraping URL: {url}")
         
-        # CRITICAL FIX: Clean up ALL sessions before creating a new one
-        # This ensures there's only ever one active session in the app, exactly like Streamlit
-        clear_all_sessions()
-        logger.debug("Cleared all existing sessions")
+        global sessions
+        sessions = {}  # Clear all sessions before creating a new one
         
         # Create a unique session ID
         session_id = scraper_service.create_session_id()
         
-        # Current time for session expiry tracking
-        current_time = time.time()
-        
-        # Scrape website and create vector store following the Streamlit pattern exactly
+        # Scrape website and create vector store 
         try:
             logger.debug(f"Starting to scrape website: {url}")
-            # This method now uses WebBaseLoader like in the Streamlit app
-            vector_store = scraper_service.get_vectorstore_from_url(url)
-            logger.debug(f"Successfully created vector store for URL: {url}")
+            vector_store, persist_dir = scraper_service.get_vectorstore_from_url(url)
+            logger.debug(f"Successfully created vector store for URL: {url} in {persist_dir}")
         except Exception as scrape_error:
             logger.error(f"Error during scraping: {str(scrape_error)}")
             return jsonify({"error": f"Failed to scrape website: {str(scrape_error)}"}), 500
         
-        # Store vector_store and initialize empty chat history with timestamp
-        # This follows the same pattern as Streamlit's session_state
+        # Store vector_store and initialize empty chat history
         sessions[session_id] = {
             "vector_store": vector_store,
-            "chat_history": [],  # Start with empty chat history like Streamlit's chat_history
-            "url": url,          # Store URL for reference
-            "timestamp": current_time
+            "chat_history": [],  # Start with empty chat history
+            "url": url          # Store URL for reference
         }
-        
-        # Also track the latest URL for debugging
-        latest_urls[session_id] = url
         
         logger.debug(f"Created new session {session_id} for URL: {url}")
         
@@ -140,38 +111,13 @@ def chat():
         
         logger.debug(f"Processing query for URL '{url}': {query}")
         
-        # Update session timestamp to keep it active
-        session["timestamp"] = time.time()
-        
         try:
-            # This matches the RAG pipeline logic in the Streamlit app
-            logger.debug("Setting up RAG pipeline for query")
-            
-            # Get context retriever chain - similar to Streamlit app's get_context_retriever_chain function
-            retriever_chain = llm_service.get_context_retriever_chain(vector_store)
-            
-            # Get conversational RAG chain - similar to Streamlit app's get_conversational_rag_chain function
-            rag_chain = llm_service.get_conversational_rag_chain(retriever_chain)
-            
-            # Get response - invoke with chat history and user input, similar to Streamlit app's get_response function
-            response_data = rag_chain.invoke({
-                "chat_history": chat_history,
-                "input": query
-            })
-            
-            logger.debug("RAG pipeline completed successfully")
-            
-            # Extract answer from response
-            if isinstance(response_data, dict) and "answer" in response_data:
-                response = response_data["answer"]
-            else:
-                logger.warning(f"Unexpected response format: {type(response_data)}")
-                response = str(response_data)  # Fallback to string representation
-                
-        except Exception as rag_error:
-            logger.error(f"Error in RAG pipeline: {str(rag_error)}")
-            # Fallback to simpler response method
+            # Get response from LLM
             response = llm_service.get_response(query, vector_store, chat_history)
+            logger.debug("Got response from LLM")
+        except Exception as e:
+            logger.error(f"Error getting response: {str(e)}")
+            return jsonify({"error": f"Error processing query: {str(e)}"}), 500
         
         # Update chat history with new interaction
         updated_history = llm_service.update_chat_history(chat_history, query, response)
@@ -179,8 +125,7 @@ def chat():
         
         return jsonify({
             "response": response,
-            "url": url,
-            "session_id": session_id  # Include session_id in response for validation
+            "url": url
         })
         
     except Exception as e:
@@ -201,29 +146,11 @@ def clear_api_sessions():
     Explicit endpoint to clear all sessions
     This can be called when loading the app to ensure a fresh state
     """
-    global sessions, latest_urls
+    global sessions
     session_count = len(sessions)
-    sessions = {}
-    latest_urls = {}
+    sessions = {}  # Simply clear all sessions
     logger.debug(f"API endpoint cleared {session_count} sessions")
-    return jsonify({"message": f"All sessions cleared successfully ({session_count} sessions)"})
-
-@app.route('/api/debug', methods=['GET'])
-def debug_state():
-    """
-    Debug endpoint to see the current server state
-    This helps diagnose session persistence issues
-    """
-    debug_info = {
-        "session_count": len(sessions),
-        "session_ids": list(sessions.keys()),
-        "urls": latest_urls,
-        "timestamp": time.time()
-    }
-    return Response(
-        json.dumps(debug_info, indent=2),
-        mimetype='application/json'
-    )
+    return jsonify({"message": f"All sessions cleared successfully"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)

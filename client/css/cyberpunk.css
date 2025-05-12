@@ -4,7 +4,7 @@
 .cyberpunk-bg {
     background-color: #0f0f18;
     position: relative;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .cyberpunk-bg::before {

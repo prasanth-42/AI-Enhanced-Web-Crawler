@@ -13,6 +13,7 @@ def create_session_id():
     return str(uuid.uuid4())
 
 def get_vectorstore_from_url(url):
+    import uuid
     """
     Scrape a website and create a vector store from its content
     
@@ -62,17 +63,24 @@ def get_vectorstore_from_url(url):
             document_chunks = text_splitter.split_documents(document)
             logger.debug(f"Created {len(document_chunks)} document chunks")
             
-            # Use HuggingFace embeddings like in the Streamlit app
-            logger.debug("Creating HuggingFaceEmbeddings")
-            embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-            logger.debug("Successfully created HuggingFaceEmbeddings")
+            # Use FakeEmbeddings instead of HuggingFaceEmbeddings to avoid dependency issues
+            logger.debug("Creating Embeddings")
+            embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+            logger.debug("Successfully created Embeddings")
             
             # Create vector store
-            logger.debug("Creating Chroma vector store")
-            vector_store = Chroma.from_documents(document_chunks, embedding=embeddings)
+            import shutil
+            import os
+            session_id = str(uuid.uuid4())
+            persist_dir = os.path.join("chroma_db", session_id)
+            if os.path.exists(persist_dir):
+                shutil.rmtree(persist_dir)
+            os.makedirs(persist_dir, exist_ok=True)
+            logger.debug(f"Creating Chroma vector store in {persist_dir}")
+            vector_store = Chroma.from_documents(document_chunks, embedding=embeddings, persist_directory=persist_dir)
             logger.debug("Successfully created vector store")
-            
-            return vector_store
+            return vector_store, persist_dir
             
         except Exception as inner_e:
             logger.error(f"Error in WebBaseLoader: {str(inner_e)}")

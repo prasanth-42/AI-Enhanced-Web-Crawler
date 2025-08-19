@@ -26,7 +26,7 @@ AI-Enhanced Web Crawler is a modern  web application that allows users to scrape
 
 ### Prerequisites
 - Python 3.9+
-- Node.js (for advanced frontend development, optional)
+- React.js (for advanced frontend development, optional)
 
 ### Installation
 1. **Clone the repository:**
